@@ -1,4 +1,4 @@
-# A GNN and Vision Transformer-based Multi-modal Neural Network for Breast Cancer Molecular Subtype Classification
+# A Hybrid Multi-modal Neural Network for Breast Cancer Molecular Subtype Classification
 
 ![image](https://github.com/JinlinYY/GVMNN/blob/main/png/method.png)
 
