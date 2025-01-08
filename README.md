@@ -2,7 +2,7 @@
 
 A hybrid multi-modal neural network model, GVMNN, has been proposed to replace traditional molecular detection methods for HER2 in clinical practice. GVMNN utilizes ultrasound images and clinical pathology reports of breast cancer patients to predict HER2 expression status, thereby guiding the formulation of HER2-targeted treatment strategies.
 
-![image](https://github.com/JinlinYY/GVMNN/blob/main/png/GVMNN-Graphical_Abstract.png)
+![image](https://github.com/JinlinYY/GVMNN/blob/main/png/GVMNN-Graphical_Abstract_Image.png)
 
 ## How to use
 
