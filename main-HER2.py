@@ -4,9 +4,12 @@ from sklearn.decomposition import PCA, MiniBatchSparsePCA, FastICA, IncrementalP
 from sklearn.metrics import  accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import StratifiedKFold
 from component.Cli_Encoder import extract_excel_features
-from component.USI_Encoder import extract_image_features
-from component.GNN_Encoder import gnn_extract_excel_features
-from component.Fusion import combine_features
+# from component.USI_Encoder import extract_image_features
+from component.USI_cnn_vit_encoder import extract_image_features
+# from component.GNN_Encoder import gnn_extract_excel_features
+from component.GNN_causal_encoder import gnn_extract_excel_features
+# from component.Fusion import combine_features
+from component.Fusion_mutual import combine_features
 from metrics.plot_roc_curve import plot_roc_curve
 from module.inputtotensor import inputtotensor
 from component.Classifier import Classifier
@@ -26,58 +29,33 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def main():
 
     # 提取原始表格特征
-    index, excel_feature, label = extract_excel_features('/tmp/pycharm_project_357/HER2_excel_data/HER2-data.xlsx')
+    index, excel_feature, label = extract_excel_features('./HER2_excel_data/HER2-data-2025-7-3-晚.xlsx')
     excel_feature_tensor = torch.tensor(excel_feature, dtype=torch.float32)
     pca_excel = MiniBatchSparsePCA(n_components=50)
     excel_feature_pca = pca_excel.fit_transform(excel_feature)
     excel_feature_pca_tensor = torch.tensor(excel_feature_pca, dtype=torch.float32)
 
     # 提取超声图像特征
-    image_filenames = ['/tmp/pycharm_project_357/HER2_image_data/{}.bmp'.format(idx) for idx in index.astype(int)]
+    image_filenames = ['./HER2_image_data/{}.bmp'.format(idx) for idx in index.astype(int)]
     image_features = extract_image_features(image_filenames, batch_size=16, num_workers=4)
+
+
     pca_image = MiniBatchSparsePCA(n_components=50)
     image_features_pca = pca_image.fit_transform(image_features)
     image_features_pca_tensor = torch.tensor(image_features_pca, dtype=torch.float32)
 
 
     # 表格特征构图，GNN提取图表格特征
-    _, gnn_excel_feature, _ = gnn_extract_excel_features('/tmp/pycharm_project_357/HER2_excel_data/HER2-data.xlsx')
+    _, gnn_excel_feature, _ = gnn_extract_excel_features('./HER2_excel_data/HER2-data-2025-7-3-晚.xlsx')
     pca_excel_gnn = MiniBatchSparsePCA(n_components=50)
     gnn_excel_feature_pca = pca_excel_gnn.fit_transform(gnn_excel_feature)
     gnn_excel_feature_pca_tensor = torch.tensor(gnn_excel_feature_pca, dtype=torch.float32)
 
-    # ####################################################################################################################################################################################
-    # # 提取原始表格特征
-    # index, excel_feature, label = extract_excel_features('/tmp/pycharm_project_357/HER2_excel_data/HER2-data.xlsx')
-    # excel_feature_tensor = torch.tensor(excel_feature, dtype=torch.float32)
-    # # pca_excel = MiniBatchSparsePCA(n_components=50)
-    # # excel_feature_pca = pca_excel.fit_transform(excel_feature)
-    # excel_feature_pca_tensor = torch.tensor(excel_feature_tensor, dtype=torch.float32)
-    #
-    # # 提取超声图像特征
-    # image_filenames = ['/tmp/pycharm_project_357/HER2_image_data/{}.bmp'.format(idx) for idx in index.astype(int)]
-    # image_features = extract_image_features(image_filenames)
-    # # pca_image = MiniBatchSparsePCA(n_components=50)
-    # # image_features_pca = pca_image.fit_transform(image_features)
-    # image_features_pca_tensor = torch.tensor(image_features, dtype=torch.float32)
-    #
-    #
-    # # 表格特征构图，GNN提取图表格特征
-    # _, gnn_excel_feature, _ = gnn_extract_excel_features('/tmp/pycharm_project_357/HER2_excel_data/HER2-data.xlsx')
-    # # pca_excel_gnn = MiniBatchSparsePCA(n_components=50)
-    # # gnn_excel_feature_pca = pca_excel_gnn.fit_transform(gnn_excel_feature)
-    # gnn_excel_feature_pca_tensor = torch.tensor(gnn_excel_feature, dtype=torch.float32)
-    #
-    # ####################################################################################################################################################################################
-
     # 特征融合
     combined_features = combine_features(excel_feature_pca_tensor, image_features_pca_tensor, gnn_excel_feature_pca_tensor)  # 三模态
-    # combined_features = combine_features(excel_feature_pca_tensor, image_features_pca_tensor)  # 两模态
     combined_features_tensor, label_tensor = inputtotensor(combined_features, label)
 
 
-    # 计算类别权重
-    class_weights = torch.tensor([1.0 / np.sum(label == i) for i in np.unique(label)], dtype=torch.float32).to(device)
 
     # K-fold cross-validation
     k_folds = 10
@@ -100,8 +78,10 @@ def main():
         optimizer = torch.optim.Adam(net.parameters(), lr=0.01)
         loss_func = FocalLoss(gamma=2)
         # 使用加权交叉熵损失函数
+        # class_weights = torch.tensor([1.0 / np.sum(label == i) for i in np.unique(label)], dtype=torch.float32).to(
+        #     device)
         # loss_func = nn.CrossEntropyLoss(weight=class_weights)
-        batch_size = 2048
+        batch_size = 128
         model_path = f'./pth/best_model_fold{fold}.pth'
 
         cm_val, cm_test, val_probs, test_probs, y_val_pred, y_test_pred, train_losses, val_losses = train_test(
