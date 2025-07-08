@@ -1,6 +1,6 @@
 # A Knowledge-Guided Multi-modal Neural Network for Breast Cancer Molecular Subtyping
 
-A hybrid multi-modal neural network model, KMNet, has been proposed to replace traditional molecular detection methods for HER2 in clinical practice. GVMNN utilizes ultrasound images and clinical pathology reports of breast cancer patients to predict HER2 expression status, thereby guiding the formulation of HER2-targeted treatment strategies.
+A knowledge-Guided multi-modal neural network model, KMNet, has been proposed to replace traditional molecular detection methods for HER2 in clinical practice. KMNet utilizes ultrasound images and clinical pathology reports of breast cancer patients to predict HER2 expression status, thereby guiding the formulation of HER2-targeted treatment strategies.
 
 ![image](https://github.com/JinlinYY/GVMNN/blob/main/png/abstract.png)
 
